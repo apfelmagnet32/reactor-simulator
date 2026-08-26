@@ -1,0 +1,9 @@
+{
+  "appId": "de.reaktorleitstand.app",
+  "appName": "Reactor Control Room",
+  "webDir": "game",
+  "backgroundColor": "#0a0f14",
+  "android": {
+    "backgroundColor": "#0a0f14"
+  }
+}

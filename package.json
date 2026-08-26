@@ -1,0 +1,42 @@
+{
+  "name": "reaktor-leitstand",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Reactor Control Room - detailed power reactor simulation (Web/Android/Desktop)",
+  "main": "electron/main.js",
+  "scripts": {
+    "sync:android": "cap sync android",
+    "assets": "capacitor-assets generate --android",
+    "build:apk:debug": "cd android && ./gradlew assembleDebug",
+    "build:apk:release": "cd android && ./gradlew assembleRelease",
+    "electron:start": "electron .",
+    "build:win": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "de.reaktorleitstand.app",
+    "productName": "Reactor Control Room",
+    "files": [
+      "package.json",
+      "electron/**/*",
+      "game/**/*",
+      "!game/test/**",
+      "!game/package.json",
+      "!node_modules/**"
+    ],
+    "directories": {
+      "output": "releases/electron-dist"
+    },
+    "win": {
+      "icon": "resources/icon.png",
+      "target": ["portable"]
+    }
+  }
+}

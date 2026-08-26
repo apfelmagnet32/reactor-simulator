@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Reactor Control Room</title>
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+<div id="menu-screen" class="screen">
+  <div class="menu-box">
+    <h1>Reactor Control Room</h1>
+    <p class="subtitle">Take over the control room of a pressurized water reactor.<br/>Keep the core critical, handle incidents, avoid a meltdown.</p>
+    <div class="menu-field">
+      <label>Difficulty</label>
+      <div class="seg" id="diff-select">
+        <button data-diff="easy">Trainee</button>
+        <button data-diff="normal" class="active">Shift Supervisor</button>
+        <button data-diff="hard">Incident Expert</button>
+      </div>
+    </div>
+    <div class="menu-field">
+      <label>Shift length</label>
+      <div class="seg" id="shift-select">
+        <button data-hours="2">Short</button>
+        <button data-hours="8" class="active">Normal</button>
+        <button data-hours="24">Long</button>
+      </div>
+    </div>
+    <label class="tos-field">
+      <input type="checkbox" id="tos-checkbox" />
+      <span>I accept the <a id="tos-link" href="#" target="_blank" rel="noopener">Terms of Service</a>.</span>
+    </label>
+    <button id="start-btn" class="primary-btn" disabled>Start Shift</button>
+    <button id="tutorial-btn" class="secondary-btn" disabled>Tutorial</button>
+    <p class="highscore" id="highscore-line"></p>
+    <p class="legal-links">
+      <a id="tos-link-2" href="#" target="_blank" rel="noopener">Terms of Service</a>
+      <span aria-hidden="true"> · </span>
+      <a id="license-link" href="#" target="_blank" rel="noopener">License</a>
+    </p>
+  </div>
+</div>
+
+<div id="intro-modal" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h2>New to the control room?</h2>
+    <p>The tutorial starts a short, guided shift from a cold reactor and walks you through bringing it critical, the controls, and the gauges step by step. You can skip it any time.</p>
+    <div class="modal-actions">
+      <button id="intro-tutorial-btn" class="primary-btn">Start Tutorial</button>
+      <button id="intro-skip-btn" class="secondary-btn">Skip, I'll dive in</button>
+    </div>
+  </div>
+</div>
+
+<div id="game-screen" class="screen hidden">
+  <header id="topbar">
+    <div class="brand">Reactor Control Room</div>
+    <div class="topstat"><span class="tlabel">Shift</span><span id="shift-time" class="tval">00:00</span></div>
+    <div class="topstat"><span class="tlabel">Energy</span><span id="energy-val" class="tval">0 MWh</span></div>
+    <div class="topstat"><span class="tlabel">Score</span><span id="score-val" class="tval">0</span></div>
+    <button id="scram-btn" class="scram">SCRAM</button>
+    <button id="scram-reset-btn" class="scram-reset hidden">RESET SCRAM</button>
+  </header>
+
+  <div id="alarm-banner" class="hidden"></div>
+
+  <div id="tutorial-box" class="hidden">
+    <div id="tutorial-text"></div>
+    <div class="tutorial-actions">
+      <button id="tutorial-skip-btn" class="secondary-btn">Skip tutorial</button>
+      <button id="tutorial-next-btn" class="primary-btn">Next</button>
+    </div>
+  </div>
+
+  <main id="layout">
+    <section id="diagram-panel">
+      <canvas id="core-canvas" width="780" height="480"></canvas>
+    </section>
+
+    <section id="gauges-panel">
+      <canvas id="gauges-canvas" width="360" height="440"></canvas>
+    </section>
+
+    <section id="controls-panel">
+      <div class="control-block">
+        <label>Control rods <span id="rod-readout">19%</span></label>
+        <input type="range" id="rod-slider" min="0" max="100" value="19" step="1" />
+        <div class="hint">0% = fully withdrawn (max. reactivity) · 100% = fully inserted</div>
+      </div>
+      <div class="control-block">
+        <label>Main coolant pump <span id="primary-readout">100%</span></label>
+        <input type="range" id="primary-slider" min="0" max="100" value="100" step="1" />
+      </div>
+      <div class="control-block">
+        <label>Feedwater pump <span id="secondary-readout">100%</span></label>
+        <input type="range" id="secondary-slider" min="0" max="100" value="100" step="1" />
+      </div>
+      <div class="control-block">
+        <label>Turbine valve <span id="turbine-readout">100%</span></label>
+        <input type="range" id="turbine-slider" min="0" max="100" value="100" step="1" />
+      </div>
+      <div class="control-row">
+        <button id="eccs-btn" class="toggle-btn">Emergency Core Cooling (ECCS)</button>
+        <button id="diesel-btn" class="toggle-btn">Emergency Diesel</button>
+      </div>
+      <div class="control-row">
+        <button id="makeup-btn" class="toggle-btn">Makeup Pump</button>
+      </div>
+      <div class="hint">Slowly refills the coolant level back to 100% once a leak is isolated. Not strong enough to counter an active leak on its own – use ECCS for that.</div>
+      <div class="control-row danger-row">
+        <button id="override-btn" class="toggle-btn danger">Override Automatic Shutdown</button>
+      </div>
+      <div class="hint">Reactor protection will no longer respond on its own – SCRAM is entirely on you.</div>
+    </section>
+
+    <section id="incidents-panel">
+      <h2>Active Incidents</h2>
+      <div id="incidents-list" class="empty">No active incidents.</div>
+      <h2>Event Log</h2>
+      <div id="log-list"></div>
+    </section>
+  </main>
+</div>
+
+<div id="gameover-screen" class="screen hidden">
+  <div class="menu-box">
+    <h1 id="gameover-title">Shift Ended</h1>
+    <p id="gameover-reason" class="subtitle"></p>
+    <div class="result-grid">
+      <div><span class="rlabel">Energy generated</span><span id="result-energy" class="rval">0 MWh</span></div>
+      <div><span class="rlabel">SCRAMs triggered</span><span id="result-scrams" class="rval">0</span></div>
+      <div><span class="rlabel">Relief valve releases</span><span id="result-releases" class="rval">0</span></div>
+      <div><span class="rlabel">Final score</span><span id="result-score" class="rval highlight">0</span></div>
+    </div>
+    <p class="highscore" id="new-highscore-line"></p>
+    <button id="restart-btn" class="primary-btn">Back to Menu</button>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
